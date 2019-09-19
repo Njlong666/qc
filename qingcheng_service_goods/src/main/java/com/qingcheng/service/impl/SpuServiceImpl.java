@@ -271,6 +271,55 @@ public class SpuServiceImpl implements SpuService {
     }
 
     /**
+     * 逻辑删除
+     * @param ids
+     * @return
+     */
+    public int logicDel(String[] ids) {
+        Spu spu = new Spu();
+        Example example = new Example(Spu.class);
+        //构建条件查询
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andIn("id",Arrays.asList(ids));
+        criteria.andEqualTo("isDelete","0");
+        int i = spuMapper.selectCountByExample(example);
+        return i;
+    }
+
+    /**
+     * 还原
+     * @param ids
+     * @return
+     */
+    public int rebuction(String[] ids) {
+        Spu spu = new Spu();
+        Example example = new Example(Spu.class);
+        //构建查询条件
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andIn("id",Arrays.asList(ids));
+        criteria.andEqualTo("isDelete","1");
+
+        int count = spuMapper.selectCountByExample(example);
+        return count;
+    }
+
+    /**
+     * 物理删除
+     * @param ids
+     * @return
+     */
+    public int physicallyDel(String[] ids) {
+        for (String id : ids) {
+            Spu spu = findById(id);
+            if ("1".equals(spu.getIsDelete())){
+                delete(spu.getId());//删除id商品
+            }
+        }
+        return 0;
+    }
+
+
+    /**
      * 构建查询条件
      * @param searchMap
      * @return

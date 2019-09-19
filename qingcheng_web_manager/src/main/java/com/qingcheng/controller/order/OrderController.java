@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.entity.Result;
 import com.qingcheng.pojo.order.Order;
+import com.qingcheng.pojo.order.Order_OrderItem;
 import com.qingcheng.service.order.OrderService;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ public class OrderController {
 
     @Reference
     private OrderService orderService;
+
 
     @GetMapping("/findAll")
     public List<Order> findAll(){
@@ -60,4 +62,26 @@ public class OrderController {
         return new Result();
     }
 
+    /**
+     * 查询订单和详情
+     * @param id
+     * @return
+     */
+    @GetMapping ("/orderFindAll")
+    public Order_OrderItem orderFindAll(String id){
+        return orderService.findByOrderID(id);
+    }
+
+    /**
+     * 批量发货
+     * @param ordersList
+     * @return
+     */
+    @PostMapping("/batch")
+    public Result batchSend(@RequestBody List<Order> ordersList){
+
+        orderService.batchSend(ordersList);
+        return new Result();
+
+    }
 }

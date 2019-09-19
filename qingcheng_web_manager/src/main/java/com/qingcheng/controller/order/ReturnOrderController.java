@@ -60,4 +60,18 @@ public class ReturnOrderController {
         return new Result();
     }
 
+
+    /**
+     * 同意退款
+     * @param id
+     * @param money
+     * @return
+     */
+    @PostMapping("/argeRefund")
+    public Result argeRefund(String id, Integer money){
+        Integer adminId = 0;//设置管理员id
+        returnOrderService.argeRefund(id,money,adminId);
+        return new Result();
+    }
+
 }

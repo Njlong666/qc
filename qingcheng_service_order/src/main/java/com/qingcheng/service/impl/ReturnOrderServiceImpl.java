@@ -2,13 +2,18 @@ package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.dao.OrderItemMapper;
+import com.qingcheng.dao.ReturnOrderItemMapper;
 import com.qingcheng.dao.ReturnOrderMapper;
 import com.qingcheng.entity.PageResult;
+import com.qingcheng.pojo.order.OrderItem;
 import com.qingcheng.pojo.order.ReturnOrder;
+import com.qingcheng.pojo.order.ReturnOrderItem;
 import com.qingcheng.service.order.ReturnOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +22,14 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
     @Autowired
     private ReturnOrderMapper returnOrderMapper;
+
+
+    @Autowired
+    private ReturnOrderItemMapper returnOrderItemMapper;
+
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
 
     /**
      * 返回全部记录
@@ -95,6 +108,69 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
         returnOrderMapper.deleteByPrimaryKey(id);
     }
 
+
+    /**
+     * 同意退款
+     * @param id
+     * @param money
+     * @param adminId
+     */
+    public void argeRefund(String id, Integer money, Integer adminId) {
+        //查询金额id
+        ReturnOrder returnOrder = returnOrderMapper.selectByPrimaryKey(id);
+        //设置判断条件
+        if (returnOrder.getReturnMoney() < money){
+            throw new RuntimeException("退款金额不合法");
+        }
+        returnOrder.setReturnMoney(money);//修改退款金额
+        returnOrder.setStatus("1");//修改处理状态
+        returnOrder.setAdminId(adminId);//设置管理员id
+        returnOrder.setDisposeTime(new Date());//修改处理时间
+        returnOrderMapper.updateByPrimaryKeySelective(returnOrder);
+    }
+
+    /**
+     * 驳回退款
+     * @param id
+     * @param remark
+     * @param money
+     */
+    public void rejectRerund(String id, String remark, Integer money) {
+        //查询id
+        ReturnOrder returnOrder = returnOrderMapper.selectByPrimaryKey(id);
+        if (returnOrder==null){
+            throw new RuntimeException("订单不存在!");
+        }
+
+        if (!"2".equals(returnOrder.getType())){
+
+            throw new RuntimeException("不是订单类型");
+        }
+        if (remark.length()<5){
+            throw new RuntimeException("请输入退款理由!");
+        }
+
+        //修改属性
+        returnOrder.setRemark(remark);// 备注信息
+        returnOrder.setStatus("2");//处理状态 2: 已驳回
+        returnOrder.setDisposeTime(new Date());// 处理时间
+        returnOrderMapper.updateByPrimaryKeySelective(returnOrder);
+
+
+        Example example = new Example(ReturnOrderItem.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("returnOrderId",id); //退货订单号
+
+        List<ReturnOrderItem> returnOrderItems = returnOrderItemMapper.selectByExample(example);
+        for (ReturnOrderItem returnOrderItem : returnOrderItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setId(returnOrderItem.getOrderItemId());
+            orderItem.setIsReturn("0");//修改是否退货
+            orderItemMapper.updateByPrimaryKeySelective(orderItem);
+        }
+
+    }
+
     /**
      * 构建查询条件
      * @param searchMap
@@ -149,11 +225,6 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
             if(searchMap.get("returnCause")!=null ){
                 criteria.andEqualTo("returnCause",searchMap.get("returnCause"));
             }
-            // 管理员id
-            if(searchMap.get("adminId")!=null ){
-                criteria.andEqualTo("adminId",searchMap.get("adminId"));
-            }
-
         }
         return example;
     }

@@ -2,13 +2,18 @@ package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.dao.OrderItemMapper;
 import com.qingcheng.dao.OrderMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.order.Order;
+import com.qingcheng.pojo.order.OrderItem;
+import com.qingcheng.pojo.order.Order_OrderItem;
 import com.qingcheng.service.order.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +22,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+
 
     /**
      * 返回全部记录
@@ -94,6 +103,45 @@ public class OrderServiceImpl implements OrderService {
     public void delete(String id) {
         orderMapper.deleteByPrimaryKey(id);
     }
+
+
+    /**
+     * 查询订单和详情
+     * @param orderId
+     * @return
+     */
+    public Order_OrderItem findByOrderID(String orderId) {
+        //根据订单id查询order
+        Order order = orderMapper.selectByPrimaryKey(orderId);
+        //根据orderid查询该id下所有的详情
+        Example example = new Example(OrderItem.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("orderId",orderId);
+        List<OrderItem> orderItems = orderItemMapper.selectByExample(example);
+        //将数据封装到联合实体类中
+        Order_OrderItem order_orderItem = new Order_OrderItem();
+        order_orderItem.setOrder(order);
+        order_orderItem.setOrderItemList(orderItems);
+        return order_orderItem;
+    }
+
+    /**
+     * 批量发货
+     * @param ordersList
+     */
+    public void batchSend(List<Order> ordersList) {
+
+        for (Order order : ordersList) {
+
+            order.setConsignStatus("1");//修改发货状态 1:已发货
+            order.setConsignTime(new Date());//修改发货时间
+            order.setOrderStatus("2");//修改订单状态 2:已发货
+
+            orderMapper.updateByPrimaryKeySelective(order);
+        }
+
+    }
+
 
     /**
      * 构建查询条件
@@ -188,6 +236,10 @@ public class OrderServiceImpl implements OrderService {
             // 实付金额
             if(searchMap.get("payMoney")!=null ){
                 criteria.andEqualTo("payMoney",searchMap.get("payMoney"));
+            }
+            //数组查询
+            if(searchMap.get("ids") != null){
+                criteria.andIn("id", Arrays.asList((String[] )searchMap.get("ids")));
             }
 
         }

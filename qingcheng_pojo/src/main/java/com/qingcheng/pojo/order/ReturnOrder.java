@@ -34,11 +34,11 @@ public class ReturnOrder implements Serializable{
 
 	private String isReturnFreight;//是否退运费
 
-	private String status;//申请状态
+	private String status;//申请3状态
 
 	private java.util.Date disposeTime;//处理时间
 
-	private Integer returnCause;//退货退款原因
+	private Integer returnCause;//退货退款原因 退货退款状态：0已申请、1已同意、2已驳回、3已完成
 
 	private String evidence;//凭证图片
 

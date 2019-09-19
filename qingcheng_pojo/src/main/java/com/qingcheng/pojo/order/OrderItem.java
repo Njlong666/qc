@@ -11,7 +11,7 @@ import java.io.Serializable;
 public class OrderItem implements Serializable{
 
 	@Id
-	private String id;//ID
+	private Long id;//ID
 
 
 	
@@ -47,10 +47,10 @@ public class OrderItem implements Serializable{
 	private String isReturn;//是否退货
 
 	
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

@@ -46,5 +46,29 @@ public interface SpuService {
     //商品上架
     public void put(String id );
 
+    //批量上架
     public int putMany(String [] ids);
+
+
+    /**
+     * 逻辑删除
+     * @param ids
+     * @return
+     */
+    public int logicDel(String[] ids);
+
+    /**
+     * 还原商品
+     * @param ids
+     * @return
+     */
+    public int rebuction(String[] ids);
+
+
+    /**
+     * 物理删除
+     * @param ids
+     * @return
+     */
+    public int physicallyDel(String[] ids);
 }

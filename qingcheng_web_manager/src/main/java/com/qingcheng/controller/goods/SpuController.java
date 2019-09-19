@@ -129,4 +129,38 @@ public class SpuController {
 
         return new Result(0,"上架"+conut+"个商品");
     }
+
+    /**
+     * 逻辑删除
+     * @param ids
+     * @return
+     */
+        @GetMapping("/logicDel")
+    public Result logicDel(String[] ids){
+        int i = spuService.logicDel(ids);
+        return new Result(0,"共删除"+"i"+"个商品");
+    }
+
+    /**
+     * 还原商品
+     * @param ids
+     * @return
+     */
+    @GetMapping("/rebuction")
+    public Result rebuction(String[] ids){
+        int count = spuService.rebuction(ids);
+        return new Result(0,"共还原"+count+"个商品");
+    }
+
+
+    /**
+     * 物理删除
+     * @param ids
+     * @return
+     */
+    @GetMapping("/physicallyDel")
+    public Result physicallyDel(String[] ids){
+        int count = spuService.physicallyDel(ids);
+        return new Result(0,"共删除"+count+"个商品");
+    }
 }

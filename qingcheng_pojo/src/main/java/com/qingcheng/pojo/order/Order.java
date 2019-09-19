@@ -60,7 +60,7 @@ public class Order implements Serializable{
 
 	private String transactionId;//交易流水号
 
-	private String orderStatus;//订单状态
+	private String orderStatus;//订单状态 0:未付款 1:待发货 2:已发货 3:已完成 4:已关闭
 
 	private String payStatus;//支付状态
 
