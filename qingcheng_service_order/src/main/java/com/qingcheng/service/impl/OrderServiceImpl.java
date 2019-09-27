@@ -1,5 +1,4 @@
 package com.qingcheng.service.impl;
-import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -146,46 +145,46 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-//    /**
-//     * 订单超时
-//     */
-//    @Autowired
-//    private OrderLogMapper orderLogMapper;
-//    public void orderTimeOutLogic() {
-//
-//        //查询点单超时时间
-//        OrderConfig orderConfig = configMapper.selectByPrimaryKey(1);
-//        Integer orderTimeout = orderConfig.getOrderTimeout();//超时时间(分)60
-//        LocalDateTime localDateTime = LocalDateTime.now().minusMinutes(orderTimeout);//得到超时时间
-//
-//        //设置查询条件
-//        Example example = new Example(Order.class);
-//        Example.Criteria criteria = example.createCriteria();
-//        criteria.andLessThan("createTime",localDateTime);//创建时间小于超时时间
-//        criteria.andEqualTo("orderStatus","0");// 0:未付款的
-//        criteria.andEqualTo("isDelete","0");//未删除的
-//
-//
-//        //查询订单超时 时间
-//        List<Order> orders = orderMapper.selectByExample(example);
-//        for (Order order : orders) {
-//            //记录订单变动日志
-//            OrderLog orderLog = new OrderLog();
-//            orderLog.setOperater("system"); //系统
-//            orderLog.setOperateTime(new Date()); //操作时间
-//            orderLog.setOrderStatus("4"); //订单状态
-//            orderLog.setPayStatus(order.getPayStatus()); //付款状态
-//            orderLog.setRemarks("订单超时,系统即将关闭!!");
-//            orderLog.setOrderId(order.getId());//订单ID
-//                         orderLogMapper.insert(orderLog);//
-//
-//            //修改订单
-//            order.setOrderStatus("4");//订单状态
-//            order.setCloseTime(new Date());//订单关闭时间
-//            orderMapper.updateByPrimaryKeySelective(order);//存入order订单表中
-//
-//        }
-//    }
+    /**
+     * 订单超时
+     */
+    @Autowired
+    private OrderLogMapper orderLogMapper;
+    public void orderTimeOutLogic() {
+
+        //查询点单超时时间
+        OrderConfig orderConfig = configMapper.selectByPrimaryKey(1);
+        Integer orderTimeout = orderConfig.getOrderTimeout();//超时时间(分)60
+        LocalDateTime localDateTime = LocalDateTime.now().minusMinutes(orderTimeout);//得到超时时间
+
+        //设置查询条件
+        Example example = new Example(Order.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andLessThan("createTime",localDateTime);//创建时间小于超时时间
+        criteria.andEqualTo("orderStatus","0");// 0:未付款的
+        criteria.andEqualTo("isDelete","0");//未删除的
+
+
+        //查询订单超时 时间
+        List<Order> orders = orderMapper.selectByExample(example);
+        for (Order order : orders) {
+            //记录订单变动日志
+            OrderLog orderLog = new OrderLog();
+            orderLog.setOperater("system"); //系统
+            orderLog.setOperateTime(new Date()); //操作时间
+            orderLog.setOrderStatus("4"); //订单状态
+            orderLog.setPayStatus(order.getPayStatus()); //付款状态
+            orderLog.setRemarks("订单超时,系统即将关闭!!");
+            orderLog.setOrderId(order.getId());//订单ID
+                         orderLogMapper.insert(orderLog);//
+
+            //修改订单
+            order.setOrderStatus("4");//订单状态
+            order.setCloseTime(new Date());//订单关闭时间
+            orderMapper.updateByPrimaryKeySelective(order);//存入order订单表中
+
+        }
+    }
 
 
     /**

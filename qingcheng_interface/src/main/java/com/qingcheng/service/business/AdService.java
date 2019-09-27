@@ -32,4 +32,12 @@ public interface AdService {
 
     public void delete(Integer id);
 
+
+    /**
+     * 根据位置查询广告列表
+     * @param position
+     * @return
+     */
+    public List<Ad> findByPosition(String position);
+
 }

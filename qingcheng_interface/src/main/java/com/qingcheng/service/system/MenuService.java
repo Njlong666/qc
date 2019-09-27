@@ -33,7 +33,7 @@ public interface MenuService {
     public void delete(String id);
 
     /**
-     *
+     *返回所有的菜单数据 为树状结构
      * @return
      */
     public List<Map>findAllMenu();

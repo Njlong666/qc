@@ -32,4 +32,10 @@ public interface CategoryService {
 
     public void delete(Integer id);
 
+    /**
+     * 查询分类
+     * @return
+     */
+    public List<Map> findCategoryTree();
+
 }

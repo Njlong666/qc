@@ -44,12 +44,14 @@ public interface OrderService {
     /**
      * 批量发货
      * @param ordersList
+     *
      */
     public void batchSend(List<Order> ordersList);
 
 
-//    /**
-//     * 订单超时
-//     */
-//    public void orderTimeOutLogic();
+    /**
+     * 订单超时
+     *
+     */
+    public void orderTimeOutLogic();
 }

@@ -3,12 +3,18 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.qingcheng.dao.AdminMapper;
+import com.qingcheng.dao.AdminRoleMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.system.Admin;
+import com.qingcheng.pojo.system.AdminAndRole;
+import com.qingcheng.pojo.system.AdminRole;
 import com.qingcheng.service.system.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import tk.mybatis.mapper.entity.Example;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,12 +77,78 @@ public class AdminServiceImpl implements AdminService {
         return adminMapper.selectByPrimaryKey(id);
     }
 
+
     /**
      * 新增
      * @param admin
      */
     public void add(Admin admin) {
         adminMapper.insert(admin);
+    }
+
+    /**
+     * 新增
+     * @param adminAndRole 组合实体类
+     */
+    @Autowired
+    private AdminRoleMapper adminRoleMapper;
+    public void addAdminRole(AdminAndRole adminAndRole) {
+        Admin admin = new Admin();
+        String passwordPlain;
+        //设置新密码
+        if ((passwordPlain = admin.getPassword())!=null ){
+            //并且加盐
+            String gensalt = BCrypt.gensalt();
+            String hashpw = BCrypt.hashpw(passwordPlain, gensalt);
+            admin.setPassword(hashpw);
+        }
+        //存完再取id 保证取出的id不为空
+        if (admin.getId()==null){
+            adminMapper.insert(admin);
+        }else {
+            adminMapper.updateByPrimaryKeySelective(admin);
+        }
+        Integer id = admin.getId();
+        //删除表中原有角色信息
+        Example example = new Example(AdminRole.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("adminId", id);
+        adminRoleMapper.deleteByExample(example);
+        //保存角色信息
+        List<Integer> roleIdList = adminAndRole.getRoleIdList();
+        AdminRole adminRole  = new AdminRole();
+        adminRole.setAdminId(id);
+        for (Integer roleId : roleIdList) {
+            adminRole.setRoleId(roleId);
+            adminRoleMapper.insert(adminRole);
+        }
+    }
+
+    /**
+     *
+     * 查询id
+     * @param id
+     * @return
+     */
+    public AdminAndRole findByAdminRoleId(Integer id) {
+        Admin admin = adminMapper.selectByPrimaryKey(id);
+        admin.setPassword(null);
+        Example example = new Example(AdminRole.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("adminId",id);
+
+        //根据条件查出adminRoleList的id集合遍历
+        List<AdminRole> adminRoleList = adminRoleMapper.selectByExample(example);
+        ArrayList<Integer> arrayList = new ArrayList<Integer>();
+        for (AdminRole adminRole : adminRoleList) {
+            //存储进arrayList集合
+            arrayList.add(adminRole.getRoleId());
+        }
+        AdminAndRole adminAndRole = new AdminAndRole();
+        adminAndRole.setAdmin(admin);
+        adminAndRole.setRoleIdList(arrayList);
+
+        return adminAndRole;
     }
 
     /**
@@ -96,6 +168,44 @@ public class AdminServiceImpl implements AdminService {
     }
 
     /**
+     * 查询name
+     * @param name
+     * @return
+     */
+    public Admin findByName(String name) {
+        Admin admin = adminMapper.selectByPrimaryKey(name);
+        return admin;
+    }
+
+    /**
+     * 修改密码
+     * @param updatePWDMap
+     */
+    public void updatePWD(Map<String, Object> updatePWDMap) {
+        String  loginName = (String) updatePWDMap.get("loginName");
+        String firstPassword = (String)updatePWDMap.get("firstPassword");
+        String newPassword =(String) updatePWDMap.get("newPassword");
+        Example example = new Example(Admin.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("loginName",loginName);
+        List<Admin> adminList = adminMapper.selectByExample(example);
+        //判断用户是否激活
+        if (adminList.isEmpty()) {
+            throw new RuntimeException("该用户未激活!");
+        }
+        //校验密码是否正确
+        boolean checkpw = BCrypt.checkpw(firstPassword, adminList.get(0).getPassword());
+        if (!checkpw){
+            throw new RuntimeException("密码输入错误!");
+        }
+        //设置新密码 并使用BCrypt加盐
+        Admin admin = new Admin();
+        admin.setId(adminList.get(0).getId());
+        admin.setPassword(BCrypt.hashpw(newPassword,BCrypt.gensalt()));
+        adminMapper.updateByPrimaryKeySelective(admin); //  updateByPrimaryKeySelective 记住忽略空密码
+    }
+
+    /**
      * 构建查询条件
      * @param searchMap
      * @return
@@ -106,12 +216,11 @@ public class AdminServiceImpl implements AdminService {
         if(searchMap!=null){
             // 用户名
             if(searchMap.get("loginName")!=null && !"".equals(searchMap.get("loginName"))){
-//                criteria.andLike("loginName","%"+searchMap.get("loginName")+"%");
                 criteria.andEqualTo("loginName",searchMap.get("loginName"));
             }
             // 密码
             if(searchMap.get("password")!=null && !"".equals(searchMap.get("password"))){
-                criteria.andLike("password","%"+searchMap.get("password")+"%");
+                criteria.andEqualTo("password",searchMap.get("password"));
             }
             // 状态
             if(searchMap.get("status")!=null && !"".equals(searchMap.get("status"))){

@@ -98,8 +98,10 @@ public class MenuServiceImpl implements MenuService {
     }
 
 
-
-
+    /**
+     * 返回所有的菜单数据 为树状结构
+     * @return
+     */
     public List<Map> findAllMenu() {
 
         //1.首先把符合条件的菜单查询处理(列表) ,通过内存判断筛选处符合条件的记录(每一级的菜单列表)

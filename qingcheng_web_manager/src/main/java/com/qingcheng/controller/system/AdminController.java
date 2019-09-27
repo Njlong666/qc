@@ -4,7 +4,10 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.entity.Result;
 import com.qingcheng.pojo.system.Admin;
+import com.qingcheng.pojo.system.AdminAndRole;
+import com.qingcheng.pojo.system.AdminRole;
 import com.qingcheng.service.system.AdminService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -57,6 +60,44 @@ public class AdminController {
     @GetMapping("/delete")
     public Result delete(Integer id){
         adminService.delete(id);
+        return new Result();
+    }
+
+
+    /**
+     * 新增
+     * @param adminAndRole
+     * @return
+     */
+    @PostMapping("/addAdminRole")
+    public Result addAdminRole(@RequestBody AdminAndRole adminAndRole){
+        adminService.addAdminRole(adminAndRole);
+        return new Result();
+    }
+
+    /**
+     * 根据id查询
+     * @param id
+     * @return
+     */
+    @GetMapping("/findByAdminRoleId")
+    public Result findByAdminRoleId(Integer id){
+        adminService.findByAdminRoleId(id);
+        return new Result();
+    }
+
+
+    /**
+     * 修改密码
+     * @param updatePWDMap
+     * @return
+     */
+    @PostMapping("/updatePWD")
+    public Result updatePWD(@RequestBody Map<String, Object> updatePWDMap){
+        //获取当前登录用户名
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        updatePWDMap.put("loginName",name);
+        adminService.updatePWD(updatePWDMap);
         return new Result();
     }
 

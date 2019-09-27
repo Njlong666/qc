@@ -61,6 +61,10 @@ public class MenuController {
     }
 
 
+    /**
+     * 返回所有的菜单数据 为树状结构
+     * @return
+     */
     @GetMapping("/findMenu")
     public List<Map> findMenu(){
         return menuService.findAllMenu();
