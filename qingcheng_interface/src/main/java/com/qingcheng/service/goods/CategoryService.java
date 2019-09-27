@@ -38,4 +38,9 @@ public interface CategoryService {
      */
     public List<Map> findCategoryTree();
 
+    /**
+     * redis缓存
+     */
+    public void saveCategoryTreeRedis();
+
 }

@@ -32,4 +32,18 @@ public interface SkuService {
 
     public void delete(String id);
 
+
+    /**
+     * 将商品价格存入Redis缓存中
+     */
+    public void savePaiceToRedis();
+
+
+    /**
+     * 根据skuId查询价格
+     * @param id
+     * @return
+     */
+    public Integer findPrice(String id);
+
 }

@@ -6,7 +6,9 @@ import com.qingcheng.dao.CategoryMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Category;
 import com.qingcheng.service.goods.CategoryService;
+import com.qingcheng.utils.CacheKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.ArrayList;
@@ -79,6 +81,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     public void add(Category category) {
         categoryMapper.insert(category);
+        saveCategoryTreeRedis();
     }
 
     /**
@@ -87,6 +90,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     public void update(Category category) {
         categoryMapper.updateByPrimaryKeySelective(category);
+        saveCategoryTreeRedis();
     }
 
     /**
@@ -103,18 +107,40 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException("存在下级分类不能删除!!");
         }
         categoryMapper.deleteByPrimaryKey(id);
+        saveCategoryTreeRedis();
     }
 
+
+
     public List<Map> findCategoryTree() {
-        //查询到符合条件
+
+        //从缓存中读取数据
+        return (List<Map>) redisTemplate.boundValueOps(CacheKey.CATEGORY_TREE).get();
+    }
+
+    /**
+     * reids缓存
+     */
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    public void saveCategoryTreeRedis() {
+        //查询商品分类导航
+        System.out.println("加载商品分类数据到缓存....");
         Example example = new Example(Category.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("isShow","1");
         example.setOrderByClause("seq");
         List<Category> categoryList = categoryMapper.selectByExample(example);
+        List<Map> parent = findByParentId(categoryList, 0);
 
-        return findByParentId(categoryList,0);
+
+        //存入Reids
+        redisTemplate.boundValueOps(CacheKey.CATEGORY_TREE).set(parent);
+
     }
+
+
 
     private List<Map> findByParentId(List<Category> categoryList,Integer parentId){
         List<Map> mapList = new ArrayList<Map>();

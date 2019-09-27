@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<html>
 
 <head>
 	<meta charset="utf-8" />
@@ -15,6 +14,7 @@
 </head>
 
 <body>
+<div id="app">
 	<!-- 头部栏位 -->
 	<!--页面顶部-->
 	<div id="nav-bottom">
@@ -1830,7 +1830,7 @@
 						<!--默认第一个预览-->
 						<div id="preview" class="spec-preview">
 							<span class="jqzoom">
-								<img th:jqimg="${sku.image}" th:src="${sku.image}" width="400px" height="400px"/>
+								<img th:jqimg="${sku.image}" th:src="${sku.image}" width="400px" height="400px" />
 							</span>
 						</div>
 						<!--下方的缩略图-->
@@ -1845,6 +1845,7 @@
 									<li th:each="img:${spuImages}">
 										<img th:src="${img}" bimg="${img}" onmousemove="preview(this)" />
 									</li>
+
 								</ul>
 							</div>
 							<a class="next">&gt;</a>
@@ -1865,7 +1866,7 @@
 							</div>
 							<div class="fl price">
 								<i>¥</i>
-								<em th:text="${ #numbers.formatDecimal(sku.price/100,0,2) }"></em>
+								<em>{{price}}</em>
 								<span>降价通知</span>
 							</div>
 							<div class="fr remark">
@@ -1906,11 +1907,11 @@
 							<dl th:each="spec:${specMap}">
 								<dt>
 									<div class="fl title">
-										<i th:each="${spec.key}"></i>
+										<i th:text="${spec.key}"></i>
 									</div>
 								</dt>
 								<dd th:each="specValue:${spec.value}">
-									<a th:href="${specValue.url}" th:class="${specValue.url==null?'locked':(specValue.checked?'selected':' ')}">
+									<a th:href="${specValue.url}" th:class="${specValue.url==null?'locked':(specValue.checked?'selected':'')}" >
 										<i th:text="${specValue.option}"></i>
 										<span title="点击取消选择">&nbsp;</span>
 									</a>
@@ -2163,16 +2164,17 @@
 						<div class="clearfix"></div>
 						<div class="tab-content tab-wraped">
 							<div id="one" class="tab-pane active">
-							<!--参数列表-->
+								<!--参数列表-->
 								<ul class="goods-intro unstyled">
-									<li th:each="para:${paraItems}" th:text="${para.key+':'+para.value}"></li>
+									<li th:each="para:${paraItems}" th:text="${para.key+'：'+para.value}" ></li>
 								</ul>
 								<!--规格列表-->
 								<ul class="goods-intro unstyled">
-									<li th:each="spec:${specItems}" th:text="${spec.key+':'+spec.value}"></li>
+									<li th:each="spec:${specItems}" th:text="${spec.key+'：'+spec.value}" ></li>
 								</ul>
 
 								<div class="intro-detail" th:utext="${spu.introduction}">
+
 								</div>
 							</div>
 							<div id="two" class="tab-pane">
@@ -2764,11 +2766,34 @@
 
 		</div>
 	</div>
-
+</div>
 	<script type="text/javascript" src="./js/plugins/jquery/jquery.min.js"></script>
 	<script type="text/javascript" src="./js/plugins/sui/sui.min.js"></script>
 	<script type="text/javascript" src="./js/plugins/jquery.jqzoom/jquery.jqzoom.js"></script>
 	<script type="text/javascript" src="./js/plugins/jquery.jqzoom/zoom.js"></script>
 </body>
+<script src="js/vue.js"></script>
+<script src="js/axios.js"></script>
+<script th:inline="javascript">
+
+	new Vue({
+		el:'#app',
+		data(){
+		    return {
+		        skuId:/*[[${sku.id}]]*/,
+				price:0
+			}
+		},
+		created(){
+		    //读取价格
+			axios.get('http://localhost:9102/sku/price.do?id='+this.skuId).then(response=>{
+			    this.price=(response.data/100).toFixed(2);
+			})
+		}
+	});
+
+
+</script>
+
 
 </html>

@@ -40,4 +40,15 @@ public interface AdService {
      */
     public List<Ad> findByPosition(String position);
 
+
+    /**
+     *
+     * 将某个广告位置存入Redis
+     */
+    public void saveAdToRedisByPosition(String position);
+    /**
+     * 将全部的广告数据存入缓存
+     */
+    public void saveAllAdToRedis();
+
 }
