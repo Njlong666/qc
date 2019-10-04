@@ -45,92 +45,93 @@ public class ItemController {
 
     @GetMapping("/createPage")
     public void createPage(String spuId){
-        //查询商品信息
-        Goods goodsByid = spuService.findGoodsByid(spuId);
-        Spu spu = goodsByid.getSpu();//获取spu信息
-        List<Sku> skuList = goodsByid.getSkuList();//获取skulieb
+
+        //1.查询商品信息
+        Goods goods = spuService.findGoodsByid(spuId);
+        // 获取spu信息
+        Spu spu = goods.getSpu();
+        // 获取sku列表
+        List<Sku> skuList = goods.getSkuList();
 
         //查询商品分类
-        List<String> categoryList = new ArrayList<>();
-        categoryList.add(categoryService.findById(spu.getCategory1Id()).getName());//1级分类对象
-        categoryList.add(categoryService.findById(spu.getCategory2Id()).getName());//2级分类对象
-        categoryList.add(categoryService.findById(spu.getCategory3Id()).getName());//3级分类对象
+        List<String> categoryList=new ArrayList<>();
+        categoryList.add(  categoryService.findById(spu.getCategory1Id()).getName() );//一级分类
+        categoryList.add(  categoryService.findById(spu.getCategory2Id()).getName() );//二级分类
+        categoryList.add(  categoryService.findById(spu.getCategory3Id()).getName() );//三级分类
 
-        //构建sku的地址列表
-        Map<String,String> urlMap = new HashMap<>();
-        for (Sku sku:skuList){
-            if ("1".equals(sku.getStatus())){
-                String specJSON = JSON.toJSONString(JSON.parseObject(sku.getSpec()), SerializerFeature.MapSortField);
-                urlMap.put(specJSON,sku.getId()+".html");
+        //sku地址列表
+        Map<String,String> urlMap=new HashMap<>();
+        for(Sku sku:skuList){
+            if("1".equals(sku.getStatus())){
+                String specJson = JSON.toJSONString( JSON.parseObject(sku.getSpec()), SerializerFeature.MapSortField);
+                urlMap.put(specJson,sku.getId()+".html");
             }
         }
 
+        //2.批量生成sku页面
+
+        for(Sku sku:skuList){
+            //(1) 创建上下文和数据模型
+            Context context=new Context();
+            Map<String,Object> dataModel= new HashMap<>();
+            dataModel.put("spu",spu);
+            dataModel.put("sku",sku);
+            dataModel.put("categoryList",categoryList);
+            dataModel.put("skuImages", sku.getImages().split(",") );//sku图片列表
+            dataModel.put("spuImages", spu.getImages().split(",") );//spu图片列表
+
+            Map paraItems=   JSON.parseObject( spu.getParaItems());//参数列表
+            dataModel.put("paraItems",paraItems);
+            Map<String,String> specItems = (Map)JSON.parseObject(sku.getSpec());//规格列表  当前sku
+            dataModel.put("specItems",specItems);
 
 
-        //生成sku页面
-        for (Sku sku:skuList){
-            //创建上下文
-            Context context = new Context();
-            Map<String,Object> dataMap = new HashMap<>();
-            dataMap.put("spu",spu);
-            dataMap.put("sku",sku);
-            dataMap.put("categoryList",categoryList);
-            dataMap.put("skuImages", sku.getImages().split(","));//sku图片列表
-            dataMap.put("spuImages", spu.getImages().split(","));//spu图片列表
-
-            Map paraItems = JSON.parseObject(spu.getParaItems());//spu参数列表
-            dataMap.put("paraItems",paraItems);
-
-            Map<String,String> specItems =(Map) JSON.parseObject(sku.getSpec());
-            dataMap.put("specItems",specItems);//sku规格列表
-            context.setVariables(dataMap);
-
-
-            Map<String,List> specMap =(Map) JSON.parseObject(spu.getSpecItems());//规格和规格选项
-            for (String key:specMap.keySet()){ //循环规格
-                List<String> list = specMap.get(key);
-                List<Map> mapList = new ArrayList<>();//新的集合
-
-
+            Map<String,List> specMap =  (Map)JSON.parseObject(spu.getSpecItems());//规格和规格选项
+            for(String key :specMap.keySet()  ){  //循环规格
+                List<String> list = specMap.get(key);//["天空之境","珠光贝母"]
+                List<Map> mapList=new ArrayList<>();//新的集合  //[{ 'option':'天空之境',checked:true },{ 'option':'珠光贝母',checked:false }]
                 //循环规格选项
-                for (String value:list){
-                    Map map = new HashMap();
+                for(String value:list){
+                    Map map=new HashMap();
                     map.put("option",value);//规格选项
-
-                    //如果和当前的sku的规格相同就是选中的
-                    if (specItems.get(key).equals(value)){
+                    if(specItems.get(key).equals(value) ){  // 如果和当前sku的规格相同，就是选中
                         map.put("checked",true);//是否选中
-                    }else {
+                    }else{
                         map.put("checked",false);//是否选中
                     }
-                    Map<String,String> spec = (Map) JSON.parseObject(sku.getSpec());//当前的sku
+                    Map<String,String>  spec= (Map)JSON.parseObject(sku.getSpec()) ;//当前的Sku
                     spec.put(key,value);
-                    String specJSON = JSON.toJSONString(spec, SerializerFeature.MapSortField);
-                    map.put("url",urlMap.get(specJSON));
+                    String specJson = JSON.toJSONString(spec , SerializerFeature.MapSortField);
+                    map.put("url",urlMap.get(specJson));
                     mapList.add(map);
                 }
                 specMap.put(key,mapList);//用新的集合替换原有的集合
             }
 
-            dataMap.put("specMap",specMap);
+            dataModel.put("specMap" ,specMap);
 
-            //准备文件
-            File dir = new File(pagePath);
-            if (!dir.exists()){
+            context.setVariables(dataModel);
+
+            //（2）准备文件
+            File dir =new File(pagePath);
+            if( !dir.exists()){
                 dir.mkdirs();
             }
-            File dest = new File(dir,sku.getId()+".html");
-            //生成页面
+            File dest= new File(dir, sku.getId()+".html" );
+
+            //（3）生成页面
             try {
-                PrintWriter writer = new PrintWriter(dest,"UTF-8");
-                templateEngine.process("item",context,writer);
-                System.out.println("生成页面:"+sku.getId()+".html");
+                PrintWriter writer=new PrintWriter( dest,"UTF-8");
+                templateEngine.process("item",context,writer );
+                System.out.println("生成页面："+sku.getId()+".html");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
         }
+
+
     }
+
 }

@@ -46,4 +46,18 @@ public interface SkuService {
      */
     public Integer findPrice(String id);
 
+
+    /**
+     * 将价格保存到Redis缓存中
+     * @param id
+     * @param price
+     */
+    public void savePriceToRedisById(String id,Integer price);
+
+
+    /**
+     * 根据id将Redis价格的缓存删除
+     */
+    public void deletePriceFromRedis(String id);
+
 }
