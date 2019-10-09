@@ -17,7 +17,7 @@ public class Init implements InitializingBean {
     private SkuService skuService;
 
     public void afterPropertiesSet() throws Exception {
-        System.out.println("---------从缓存预热");
+        System.out.println("---------缓存预热");
         categoryService.saveCategoryTreeRedis();
 
         System.out.println("商品从缓存中预热-------------");

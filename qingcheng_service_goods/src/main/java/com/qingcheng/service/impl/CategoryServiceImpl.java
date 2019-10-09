@@ -145,7 +145,7 @@ public class CategoryServiceImpl implements CategoryService {
     private List<Map> findByParentId(List<Category> categoryList,Integer parentId){
         List<Map> mapList = new ArrayList<Map>();
         for(Category category : categoryList){
-            if (category.getParentId().equals(parentId)){
+            if (parentId.equals(category.getParentId())){
                 Map map = new HashMap();
                 map.put("name",category.getName());
                 map.put("menus",findByParentId(categoryList,category.getId()));//下级分类id
