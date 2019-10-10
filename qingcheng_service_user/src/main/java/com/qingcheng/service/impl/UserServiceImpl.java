@@ -118,12 +118,9 @@ public class UserServiceImpl implements UserService {
         }
         System.out.println("短信验证码: "+code);
 
-
         //2.将验证码存储到redis中
         redisTemplate.boundValueOps("code_"+phone).set(code+"");
         redisTemplate.boundValueOps("code_"+phone).expire(5, TimeUnit.MINUTES);
-
-
 
         //将3.验证码发送到mq
         Map<String,String> map = new HashMap<String, String>();
